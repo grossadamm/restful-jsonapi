@@ -31,21 +31,23 @@ module Restful
       end
 
       def restify_relationship(relationship_name, relationship_data)
-        if data_is_present?(relationship_data[:data])
-          if relationship_data[:data].is_a? Array
-            restify_has_many(relationship_name, relationship_data)
-          else
-            restify_belongs_to(relationship_name, relationship_data)
-          end
+        if data_is_present?(relationship_data[:data]) && relationship_data[:data].is_a?(Array)
+          restify_has_many(relationship_name, relationship_data)
+        elsif relationship_data.present? && relationship_data.has_key?(:data)
+          restify_belongs_to(relationship_name, relationship_data)
         end
       end
 
       def restify_belongs_to(relationship_name, relationship_data)
-        if relationship_data[:data].values_at(:attributes,:relationships).compact.length > 0
+        if relationship_data[:data].present? and relationship_data[:data].values_at(:attributes,:relationships).compact.length > 0
           relationship_key = relationship_name.to_s.underscore+"_attributes"
           {relationship_key => restify_data(relationship_name,relationship_data[:data])}
         else
-          {"#{relationship_name.underscore}_id" => relationship_data[:data][:id]}
+          if relationship_data[:data].nil?
+            {"#{relationship_name.underscore}_id" => nil}
+          else
+            {"#{relationship_name.underscore}_id" => relationship_data[:data][:id]}
+          end
         end
       end
 
